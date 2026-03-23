@@ -216,6 +216,19 @@ body {
   text-overflow: ellipsis;
 }
 
+#chat-model-select {
+  background: var(--surface-hover);
+  color: var(--accent);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  appearance: none;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+}
+
 /* ===== Thinking Bar ===== */
 #thinking-bar {
   display: flex;

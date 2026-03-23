@@ -33,6 +33,7 @@
   const chatSubtitle = document.getElementById('chat-subtitle');
   const chatHeaderInfo = document.getElementById('chat-header-info');
   const chatDeleteBtn = document.getElementById('chat-delete-btn');
+  const chatModelSelect = document.getElementById('chat-model-select');
   const thinkingBar = document.getElementById('thinking-bar');
   const chatArea = document.getElementById('chat-area');
   const promptInput = document.getElementById('prompt-input');
@@ -250,6 +251,8 @@
     chatTitle.textContent = session?.name || 'Chat';
     chatSubtitle.textContent = session?.cwd || '';
 
+    chatModelSelect.value = session?.model || '';
+
     showScreen('chat');
     chatArea.innerHTML = '';
     setThinking(false);
@@ -464,6 +467,16 @@
     dirSelectBtn.addEventListener('click', confirmCreateSession);
     backBtn.addEventListener('click', () => { showScreen('sessions'); loadSessions(); });
     chatDeleteBtn.addEventListener('click', deleteCurrentSession);
+    chatModelSelect.addEventListener('change', async () => {
+      if (!currentSessionId) return;
+      await fetch(`/api/sessions/${currentSessionId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ model: chatModelSelect.value }),
+      });
+      const s = sessions.find((s) => s.id === currentSessionId);
+      if (s) s.model = chatModelSelect.value;
+    });
     chatHeaderInfo.addEventListener('click', showRenameModal);
     renameCancel.addEventListener('click', () => { renameModal.style.display = 'none'; });
     renameConfirm.addEventListener('click', confirmRename);

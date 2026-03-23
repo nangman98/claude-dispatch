@@ -55,7 +55,8 @@ api.patch('/sessions/:id', (req, res) => {
   const session = store.get(req.params.id);
   if (!session) return res.status(404).json({ error: 'Session not found' });
   if (req.body.name) session.name = req.body.name;
-  res.json({ ok: true, name: session.name });
+  if (req.body.model !== undefined) session.model = req.body.model;
+  res.json({ ok: true, name: session.name, model: session.model });
 });
 
 api.delete('/sessions/:id', (req, res) => {
