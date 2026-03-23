@@ -144,7 +144,8 @@
         }
         setThinking(false);
         enableInput();
-        loadSessions(); // refresh list preview
+        loadSessions();
+        loadCommands(); // refresh after first response caches them
         break;
 
       case 'status':
