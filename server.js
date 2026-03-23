@@ -16,7 +16,12 @@ const runner = new ClaudeRunner();
 
 const app = express();
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static('public', {
+  etag: false,
+  setHeaders: (res) => {
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  },
+}));
 
 // Auth for API routes
 const api = express.Router();
