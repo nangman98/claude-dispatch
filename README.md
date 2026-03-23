@@ -1,5 +1,7 @@
 # Claude Dispatch
 
+[한국어](README.ko.md)
+
 Control [Claude Code](https://claude.com/claude-code) CLI from your phone with a mobile-friendly web interface.
 
 A lightweight DIY alternative to Claude's official Dispatch feature — runs entirely on your local machine with no external dependencies.
