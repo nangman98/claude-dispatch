@@ -517,6 +517,9 @@
     renameCancel.addEventListener('click', () => { renameModal.style.display = 'none'; });
     renameConfirm.addEventListener('click', confirmRename);
     renameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmRename(); });
+    tabBar.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+    termRunBtn.addEventListener('click', runTermCommand);
+    termInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') runTermCommand(); });
     fileInput.addEventListener('change', handleFileSelect);
     sendBtn.addEventListener('click', sendPrompt);
     promptInput.addEventListener('keydown', (e) => {
@@ -527,6 +530,70 @@
       promptInput.style.height = Math.min(promptInput.scrollHeight, 120) + 'px';
       handleInputForCommands();
     });
+  }
+
+  // ===== Tabs (Chat / Terminal) =====
+  const tabBar = document.getElementById('tab-bar');
+  const termArea = document.getElementById('term-area');
+  const termOutput = document.getElementById('term-output');
+  const chatFooter = document.getElementById('chat-footer');
+  const termFooter = document.getElementById('term-footer');
+  const termInput = document.getElementById('term-input');
+  const termRunBtn = document.getElementById('term-run');
+  let activeTab = 'chat';
+
+  function switchTab(tab) {
+    activeTab = tab;
+    tabBar.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === tab));
+    chatArea.style.display = tab === 'chat' ? '' : 'none';
+    termArea.style.display = tab === 'term' ? '' : 'none';
+    chatFooter.style.display = tab === 'chat' ? '' : 'none';
+    termFooter.style.display = tab === 'term' ? '' : 'none';
+    document.getElementById('cmd-popup').style.display = 'none';
+    document.getElementById('image-preview').style.display = 'none';
+    if (tab === 'term') termInput.focus();
+    else promptInput.focus();
+  }
+
+  async function runTermCommand() {
+    const cmd = termInput.value.trim();
+    if (!cmd) return;
+    termInput.value = '';
+
+    const session = sessions.find((s) => s.id === currentSessionId);
+    const cwd = session?.cwd || '';
+
+    const block = document.createElement('div');
+    block.className = 'term-block';
+    block.innerHTML = `<div class="term-cmd">$ ${escapeHtml(cmd)}</div>`;
+    termOutput.appendChild(block);
+
+    try {
+      const res = await fetch('/api/exec', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ command: cmd, cwd }),
+      });
+      const data = await res.json();
+      if (data.stdout) {
+        const out = document.createElement('div');
+        out.className = 'term-out';
+        out.textContent = data.stdout;
+        block.appendChild(out);
+      }
+      if (data.stderr) {
+        const err = document.createElement('div');
+        err.className = 'term-err';
+        err.textContent = data.stderr;
+        block.appendChild(err);
+      }
+    } catch {
+      const err = document.createElement('div');
+      err.className = 'term-err';
+      err.textContent = 'Connection error';
+      block.appendChild(err);
+    }
+    termArea.scrollTop = termArea.scrollHeight;
   }
 
   // ===== PWA =====

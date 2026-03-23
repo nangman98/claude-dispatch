@@ -229,6 +229,107 @@ body {
   flex-shrink: 0;
 }
 
+/* ===== Tab bar ===== */
+#tab-bar {
+  display: flex;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.tab {
+  flex: 1;
+  padding: 8px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ===== Terminal ===== */
+#term-area {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 10px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.term-block {
+  margin-bottom: 8px;
+}
+
+.term-cmd {
+  color: var(--accent);
+}
+
+.term-out {
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.term-err {
+  color: var(--danger);
+  white-space: pre-wrap;
+}
+
+#term-footer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+#term-prompt {
+  color: var(--accent);
+  font-family: 'SF Mono', monospace;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+#term-input {
+  flex: 1;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: 'SF Mono', monospace;
+  outline: none;
+}
+
+#term-input:focus {
+  border-color: var(--accent);
+}
+
+#term-run {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 /* ===== Thinking Bar ===== */
 #thinking-bar {
   display: flex;

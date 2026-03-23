@@ -83,6 +83,20 @@ api.post('/upload', (req, res) => {
   ws.on('error', () => res.status(500).json({ error: 'Upload failed' }));
 });
 
+// Terminal: execute shell command
+api.post('/exec', (req, res) => {
+  const { command, cwd } = req.body;
+  if (!command) return res.status(400).json({ error: 'No command' });
+  const { exec } = require('node:child_process');
+  exec(command, { cwd: cwd || os.homedir(), timeout: 30000, maxBuffer: 1024 * 1024 }, (err, stdout, stderr) => {
+    res.json({
+      stdout: stdout || '',
+      stderr: stderr || '',
+      code: err ? err.code || 1 : 0,
+    });
+  });
+});
+
 app.use('/api', api);
 
 // HTTP server

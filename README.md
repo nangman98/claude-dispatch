@@ -13,11 +13,18 @@ A lightweight DIY alternative to Claude's official Dispatch feature — runs ent
 ## Features
 
 - **Real-time streaming** — see tokens appear as Claude thinks
-- **Session management** — multiple conversations with full context
+- **Session management** — multiple conversations with full context, rename, directory picker
+- **Model switching** — change between Opus / Sonnet / Haiku mid-session
+- **Slash commands** — autocomplete popup for `/command` (skills, tools)
+- **Image attachment** — send photos for Claude to analyze
+- **Built-in terminal** — run shell commands directly from your phone
+- **Tool status** — see what Claude is doing (Reading file, Running command, etc.)
+- **Web search** — Claude automatically searches the web when needed
+- **Project context** — CLAUDE.md, memory, skills loaded per working directory
 - **Mobile-first PWA** — add to home screen for app-like experience
 - **Token auth** — secure access with auto-generated token
 - **Remote access** — use from anywhere via Tailscale
-- **Zero config** — just `npm start` and open the URL
+- **Auto-start** — runs as background service on macOS / Windows
 
 ## Requirements
 
