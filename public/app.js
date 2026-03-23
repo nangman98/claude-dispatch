@@ -149,7 +149,21 @@
       case 'status':
         if (msg.status === 'thinking') {
           statusDot.className = 'connected thinking';
-          setThinking(true);
+          setThinking('Claude is thinking...');
+        } else if (msg.status === 'tool') {
+          statusDot.className = 'connected thinking';
+          const toolLabels = {
+            Bash: 'Running command...',
+            Read: 'Reading file...',
+            Write: 'Writing file...',
+            Edit: 'Editing file...',
+            Glob: 'Searching files...',
+            Grep: 'Searching code...',
+            WebFetch: 'Fetching web...',
+            WebSearch: 'Searching web...',
+            Agent: 'Running agent...',
+          };
+          setThinking(toolLabels[msg.tool] || `Using ${msg.tool}...`);
         } else {
           statusDot.className = 'connected';
           setThinking(false);
@@ -175,8 +189,13 @@
     }
   }
 
-  function setThinking(on) {
-    thinkingBar.style.display = on ? '' : 'none';
+  function setThinking(text) {
+    if (text) {
+      thinkingBar.style.display = '';
+      thinkingBar.querySelector('span:last-child').textContent = text;
+    } else {
+      thinkingBar.style.display = 'none';
+    }
   }
 
   // ===== Sessions =====

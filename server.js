@@ -160,9 +160,9 @@ function handlePrompt(ws, msg) {
         ws.send(JSON.stringify({ type: 'error', sessionId, message }));
       }
     },
-    onStatus(status) {
+    onStatus(status, toolName) {
       if (ws.readyState === ws.OPEN) {
-        ws.send(JSON.stringify({ type: 'status', sessionId, status }));
+        ws.send(JSON.stringify({ type: 'status', sessionId, status, tool: toolName }));
       }
     },
   });
