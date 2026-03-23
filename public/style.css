@@ -331,6 +331,38 @@ body {
   padding: 0;
 }
 
+/* ===== Command autocomplete ===== */
+#cmd-popup {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+  z-index: 50;
+}
+
+.cmd-item {
+  padding: 10px 14px;
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+
+.cmd-item:active, .cmd-item.active {
+  background: var(--surface-hover);
+}
+
+.cmd-item .cmd-name {
+  color: var(--accent);
+  font-weight: 600;
+}
+
 /* ===== Image preview ===== */
 #image-preview {
   display: flex;
@@ -383,6 +415,7 @@ body {
 }
 
 footer {
+  position: relative;
   display: flex;
   align-items: flex-end;
   gap: 8px;

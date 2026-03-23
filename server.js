@@ -59,6 +59,10 @@ api.patch('/sessions/:id', (req, res) => {
   res.json({ ok: true, name: session.name, model: session.model });
 });
 
+api.get('/commands', (req, res) => {
+  res.json(runner.slashCommands || []);
+});
+
 api.delete('/sessions/:id', (req, res) => {
   runner.abort(req.params.id);
   store.delete(req.params.id);

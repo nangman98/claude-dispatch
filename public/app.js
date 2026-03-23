@@ -98,7 +98,7 @@
     if (ws && ws.readyState <= 1) return;
     const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
     ws = new WebSocket(`${proto}//${location.host}/ws?token=${token}`);
-    ws.onopen = () => { statusDot.className = 'connected'; reconnectDelay = 1000; loadSessions(); };
+    ws.onopen = () => { statusDot.className = 'connected'; reconnectDelay = 1000; loadSessions(); loadCommands(); };
     ws.onclose = () => { statusDot.className = ''; scheduleReconnect(); };
     ws.onerror = () => {};
     ws.onmessage = (e) => { try { handleMessage(JSON.parse(e.data)); } catch {} };
@@ -381,6 +381,42 @@
     sendBtn.disabled = true;
   }
 
+  // -- Slash command autocomplete --
+  const cmdPopup = document.getElementById('cmd-popup');
+  let slashCommands = [];
+
+  async function loadCommands() {
+    try {
+      const res = await fetch('/api/commands', { headers: { Authorization: `Bearer ${token}` } });
+      slashCommands = await res.json();
+    } catch {}
+  }
+
+  function handleInputForCommands() {
+    const text = promptInput.value;
+    if (text.startsWith('/') && !text.includes(' ')) {
+      const query = text.slice(1).toLowerCase();
+      const matches = slashCommands.filter((c) => c.toLowerCase().includes(query)).slice(0, 8);
+      if (matches.length > 0) {
+        cmdPopup.innerHTML = '';
+        matches.forEach((cmd) => {
+          const el = document.createElement('div');
+          el.className = 'cmd-item';
+          el.innerHTML = `<span class="cmd-name">/${cmd}</span>`;
+          el.addEventListener('click', () => {
+            promptInput.value = `/${cmd} `;
+            cmdPopup.style.display = 'none';
+            promptInput.focus();
+          });
+          cmdPopup.appendChild(el);
+        });
+        cmdPopup.style.display = '';
+        return;
+      }
+    }
+    cmdPopup.style.display = 'none';
+  }
+
   // -- Image handling --
   const fileInput = document.getElementById('file-input');
   const imagePreview = document.getElementById('image-preview');
@@ -489,6 +525,7 @@
     promptInput.addEventListener('input', () => {
       promptInput.style.height = 'auto';
       promptInput.style.height = Math.min(promptInput.scrollHeight, 120) + 'px';
+      handleInputForCommands();
     });
   }
 
