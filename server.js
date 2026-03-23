@@ -2,6 +2,7 @@ const http = require('node:http');
 const os = require('node:os');
 const fs = require('node:fs');
 const path = require('node:path');
+const crypto = require('node:crypto');
 const express = require('express');
 const { WebSocketServer } = require('ws');
 const { getOrCreateToken, authMiddleware, verifyWebSocket } = require('./lib/auth');
@@ -26,7 +27,7 @@ api.get('/sessions', (req, res) => {
 });
 
 api.post('/sessions', (req, res) => {
-  const session = store.create(req.body.name, req.body.cwd);
+  const session = store.create(req.body.name, req.body.cwd, req.body.model);
   res.json(session);
 });
 
@@ -61,6 +62,20 @@ api.delete('/sessions/:id', (req, res) => {
   runner.abort(req.params.id);
   store.delete(req.params.id);
   res.json({ ok: true });
+});
+
+// Image upload (raw binary, no multer needed)
+const UPLOAD_DIR = path.join(os.tmpdir(), 'claude-dispatch-uploads');
+fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+
+api.post('/upload', (req, res) => {
+  const ext = req.headers['x-filename']?.split('.').pop() || 'png';
+  const filename = `${crypto.randomUUID()}.${ext}`;
+  const filepath = path.join(UPLOAD_DIR, filename);
+  const ws = fs.createWriteStream(filepath);
+  req.pipe(ws);
+  ws.on('finish', () => res.json({ path: filepath }));
+  ws.on('error', () => res.status(500).json({ error: 'Upload failed' }));
 });
 
 app.use('/api', api);
@@ -132,7 +147,9 @@ function handlePrompt(ws, msg) {
 
   const isFirstMessage = !session.hasMessages || session.messages.filter(m => m.role === 'user').length <= 1;
 
-  runner.run(sessionId, text, isFirstMessage, session.cwd, {
+  const images = msg.images || [];
+  const options = { model: session.model };
+  runner.run(sessionId, text, isFirstMessage, session.cwd, images, options, {
     onToken(token) {
       if (ws.readyState === ws.OPEN) {
         ws.send(JSON.stringify({ type: 'token', sessionId, text: token }));

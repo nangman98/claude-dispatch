@@ -49,7 +49,12 @@
       <span>Claude is thinking...</span>
     </div>
     <main id="chat-area"></main>
+    <div id="image-preview" style="display:none"></div>
     <footer>
+      <label id="attach-btn" title="Attach image">
+        <input type="file" id="file-input" accept="image/*" multiple hidden>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+      </label>
       <textarea id="prompt-input" rows="1" placeholder="Send a message..." disabled></textarea>
       <button id="send-btn" disabled>Send</button>
     </footer>
@@ -61,6 +66,11 @@
       <h3>Select Project Directory</h3>
       <div id="dir-current"></div>
       <div id="dir-list"></div>
+      <select id="model-select">
+        <option value="">Default (Opus)</option>
+        <option value="sonnet">Sonnet (faster)</option>
+        <option value="haiku">Haiku (fastest)</option>
+      </select>
       <div class="modal-actions">
         <button id="dir-up">.. Parent</button>
         <button id="dir-select">Use This Directory</button>

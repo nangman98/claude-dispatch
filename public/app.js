@@ -150,6 +150,9 @@
         if (msg.status === 'thinking') {
           statusDot.className = 'connected thinking';
           setThinking('Claude is thinking...');
+        } else if (msg.status === 'responding') {
+          statusDot.className = 'connected thinking';
+          setThinking('Responding...');
         } else if (msg.status === 'tool') {
           statusDot.className = 'connected thinking';
           const toolLabels = {
@@ -295,12 +298,13 @@
 
   async function confirmCreateSession() {
     dirModal.style.display = 'none';
+    const model = document.getElementById('model-select').value;
     try {
       const name = selectedDir.split('/').pop() || 'Home';
       const res = await fetch('/api/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name, cwd: selectedDir }),
+        body: JSON.stringify({ name, cwd: selectedDir, model }),
       });
       const session = await res.json();
       await loadSessions();
@@ -374,15 +378,57 @@
     sendBtn.disabled = true;
   }
 
+  // -- Image handling --
+  const fileInput = document.getElementById('file-input');
+  const imagePreview = document.getElementById('image-preview');
+  let pendingImages = []; // server file paths
+
+  async function handleFileSelect(e) {
+    const files = Array.from(e.target.files);
+    for (const file of files) {
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}`, 'X-Filename': file.name },
+          body: file,
+        });
+        const data = await res.json();
+        pendingImages.push(data.path);
+
+        const wrap = document.createElement('span');
+        wrap.className = 'img-remove';
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        wrap.appendChild(img);
+        wrap.addEventListener('click', () => {
+          pendingImages = pendingImages.filter((p) => p !== data.path);
+          wrap.remove();
+          if (pendingImages.length === 0) imagePreview.style.display = 'none';
+        });
+        imagePreview.appendChild(wrap);
+        imagePreview.style.display = '';
+      } catch {}
+    }
+    fileInput.value = '';
+  }
+
   function sendPrompt() {
     const text = promptInput.value.trim();
-    if (!text || !currentSessionId) return;
-    addBubble('user', text);
+    if ((!text && pendingImages.length === 0) || !currentSessionId) return;
+    addBubble('user', text || '(image)');
     scrollToBottom();
     promptInput.value = '';
     promptInput.style.height = 'auto';
     disableInput();
-    wsSend({ type: 'prompt', sessionId: currentSessionId, text });
+
+    const msg = { type: 'prompt', sessionId: currentSessionId, text: text || 'Describe this image.' };
+    if (pendingImages.length > 0) {
+      msg.images = pendingImages;
+      pendingImages = [];
+      imagePreview.innerHTML = '';
+      imagePreview.style.display = 'none';
+    }
+    wsSend(msg);
   }
 
   // ===== Markdown (minimal) =====
@@ -422,6 +468,7 @@
     renameCancel.addEventListener('click', () => { renameModal.style.display = 'none'; });
     renameConfirm.addEventListener('click', confirmRename);
     renameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmRename(); });
+    fileInput.addEventListener('change', handleFileSelect);
     sendBtn.addEventListener('click', sendPrompt);
     promptInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendPrompt(); }
