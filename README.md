@@ -27,15 +27,27 @@ A lightweight DIY alternative to Claude's official Dispatch feature — runs ent
 
 ## Quick Start
 
+### macOS
+
 ```bash
 git clone https://github.com/nangman98/claude-dispatch.git
 cd claude-dispatch
 bash setup.sh
 ```
 
+### Windows
+
+```powershell
+git clone https://github.com/nangman98/claude-dispatch.git
+cd claude-dispatch
+setup.bat
+```
+
+> Run as Administrator for auto-start registration.
+
 That's it. The setup script will:
 - Install dependencies
-- Register a background service (macOS LaunchAgent)
+- Register a background service (macOS LaunchAgent / Windows Task Scheduler)
 - Auto-start the server (and restart on crash)
 - Print the URL to open on your phone
 
@@ -67,6 +79,7 @@ For an app-like experience without the browser address bar:
 
 ### Service Management
 
+**macOS:**
 ```bash
 # Stop
 launchctl unload ~/Library/LaunchAgents/com.claude-dispatch.plist
@@ -76,6 +89,18 @@ launchctl unload ~/Library/LaunchAgents/com.claude-dispatch.plist && launchctl l
 
 # Logs
 tail -f ~/claude-dispatch/dispatch.log
+```
+
+**Windows (run as Administrator):**
+```powershell
+# Stop
+schtasks /end /tn "ClaudeDispatch"
+
+# Remove auto-start
+schtasks /delete /tn "ClaudeDispatch" /f
+
+# Logs
+type dispatch.log
 ```
 
 ## Usage
@@ -106,8 +131,8 @@ The dot in the top-left corner shows connection status:
 
 - **Shift+Enter** for multi-line messages
 - **Abort**: if Claude is taking too long, delete the session and create a new one
-- The server must be running on your Mac for the app to work
-- Keep your Mac awake (disable sleep) for reliable access
+- The server must be running on your Mac/PC for the app to work
+- Keep your computer awake (disable sleep) for reliable access
 
 ## How It Works
 
@@ -146,7 +171,7 @@ Phone (PWA)                    Mac (server.js)                  Claude Code CLI
 
 | Problem | Solution |
 |---------|----------|
-| Red dot (disconnected) | Check if server is running on Mac (`npm start`) |
+| Red dot (disconnected) | Check if server is running (`npm start`) |
 | Can't connect remotely | Ensure Tailscale is active on both devices |
 | "Unauthorized" error | Token mismatch — revisit the full URL from the terminal output |
 | Session not responding | Delete the session and create a new one |
