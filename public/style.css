@@ -596,6 +596,43 @@ footer {
   border-color: var(--accent);
 }
 
+#bg-upload-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-hover);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: center;
+}
+
+#bg-clear-btn {
+  background: var(--surface-hover);
+  color: var(--danger);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.has-bg-image #chat-area,
+.has-bg-image #term-area {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.has-bg-image .message.user {
+  background: rgba(31, 111, 235, 0.85);
+}
+
+.has-bg-image .message.assistant {
+  background: rgba(28, 35, 51, 0.85);
+}
+
 /* ===== Modals ===== */
 #dir-modal,
 #rename-modal {

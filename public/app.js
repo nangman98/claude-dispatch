@@ -631,6 +631,10 @@
     document.getElementById('theme-btn').addEventListener('click', () => { themeModal.style.display = ''; });
     document.getElementById('theme-close').addEventListener('click', () => { themeModal.style.display = 'none'; });
 
+    // Background image
+    document.getElementById('bg-file-input').addEventListener('change', handleBgImage);
+    document.getElementById('bg-clear-btn').addEventListener('click', clearBgImage);
+
     // Load saved theme
     const saved = localStorage.getItem('dispatch-theme');
     if (saved) {
@@ -639,6 +643,37 @@
         applyTheme(bg, surface, false);
       } catch {}
     }
+
+    // Load saved bg image
+    const savedBg = localStorage.getItem('dispatch-bg-image');
+    if (savedBg) applyBgImage(savedBg, false);
+  }
+
+  function handleBgImage(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      applyBgImage(ev.target.result);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  }
+
+  function applyBgImage(dataUrl, save = true) {
+    const chatScreen = document.getElementById('chat-screen');
+    chatScreen.style.backgroundImage = `url(${dataUrl})`;
+    chatScreen.style.backgroundSize = 'cover';
+    chatScreen.style.backgroundPosition = 'center';
+    chatScreen.classList.add('has-bg-image');
+    if (save) localStorage.setItem('dispatch-bg-image', dataUrl);
+  }
+
+  function clearBgImage() {
+    const chatScreen = document.getElementById('chat-screen');
+    chatScreen.style.backgroundImage = '';
+    chatScreen.classList.remove('has-bg-image');
+    localStorage.removeItem('dispatch-bg-image');
   }
 
   function applyTheme(bg, surface, save = true) {
