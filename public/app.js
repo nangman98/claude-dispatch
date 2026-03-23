@@ -85,6 +85,7 @@
     showScreen('sessions');
     connect();
     bindEvents();
+    loadSessions(); // also load via REST in case WebSocket is slow
   }
 
   function showScreen(name) {
@@ -461,14 +462,52 @@
     promptInput.style.height = 'auto';
     disableInput();
 
-    const msg = { type: 'prompt', sessionId: currentSessionId, text: text || 'Describe this image.' };
-    if (pendingImages.length > 0) {
-      msg.images = pendingImages;
+    const prompt = text || 'Describe this image.';
+    const images = pendingImages.length > 0 ? [...pendingImages] : undefined;
+    if (images) {
       pendingImages = [];
       imagePreview.innerHTML = '';
       imagePreview.style.display = 'none';
     }
-    wsSend(msg);
+
+    // Try WebSocket first, fallback to REST
+    if (ws?.readyState === WebSocket.OPEN) {
+      const msg = { type: 'prompt', sessionId: currentSessionId, text: prompt };
+      if (images) msg.images = images;
+      wsSend(msg);
+    } else {
+      sendPromptREST(prompt, images);
+    }
+  }
+
+  async function sendPromptREST(text, images) {
+    setThinking('Claude is thinking...');
+    try {
+      const res = await fetch(`/api/sessions/${currentSessionId}/prompt`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ text, images }),
+      });
+      const result = await res.json();
+      if (res.ok) {
+        const bubble = addBubble('assistant', '');
+        bubble.querySelector('.content').innerHTML = renderMarkdown(result.text);
+        if (result.cost != null) {
+          const meta = document.createElement('span');
+          meta.className = 'meta';
+          meta.textContent = `$${result.cost.toFixed(4)} · ${(result.duration_ms / 1000).toFixed(1)}s`;
+          bubble.appendChild(meta);
+        }
+        scrollToBottom();
+      } else {
+        addBubble('error', result.error || 'Error');
+      }
+    } catch (e) {
+      addBubble('error', 'Connection failed');
+    }
+    setThinking(false);
+    enableInput();
+    loadSessions();
   }
 
   // ===== Markdown (minimal) =====

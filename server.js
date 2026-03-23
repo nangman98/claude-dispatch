@@ -102,6 +102,38 @@ api.post('/exec', (req, res) => {
   });
 });
 
+// REST-based prompt (fallback when WebSocket doesn't work)
+api.post('/sessions/:id/prompt', (req, res) => {
+  const { text, images } = req.body;
+  const session = store.get(req.params.id);
+  if (!session) return res.status(404).json({ error: 'Session not found' });
+  if (session.isRunning) return res.status(409).json({ error: 'Session is busy' });
+
+  store.addMessage(req.params.id, 'user', text);
+  store.setRunning(req.params.id, true);
+
+  const isFirstMessage = !session.hasMessages || session.messages.filter(m => m.role === 'user').length <= 1;
+  const options = { model: session.model };
+
+  let fullText = '';
+  runner.run(req.params.id, text, isFirstMessage, session.cwd, images || [], options, {
+    onToken(t) { fullText += t; },
+    onComplete(result) {
+      store.addMessage(req.params.id, 'assistant', result.text, {
+        cost: result.cost,
+        duration_ms: result.duration_ms,
+      });
+      store.setRunning(req.params.id, false);
+      res.json(result);
+    },
+    onError(message) {
+      store.setRunning(req.params.id, false);
+      res.status(500).json({ error: message });
+    },
+    onStatus() {},
+  });
+});
+
 app.use('/api', api);
 
 // HTTP server
