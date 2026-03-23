@@ -50,6 +50,13 @@ api.get('/sessions/:id/messages', (req, res) => {
   res.json(messages);
 });
 
+api.patch('/sessions/:id', (req, res) => {
+  const session = store.get(req.params.id);
+  if (!session) return res.status(404).json({ error: 'Session not found' });
+  if (req.body.name) session.name = req.body.name;
+  res.json({ ok: true, name: session.name });
+});
+
 api.delete('/sessions/:id', (req, res) => {
   runner.abort(req.params.id);
   store.delete(req.params.id);

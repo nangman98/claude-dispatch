@@ -11,15 +11,51 @@
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <header>
-    <span id="status-dot"></span>
-    <select id="session-select">
-      <option value="" disabled selected>No sessions</option>
-    </select>
-    <button id="new-session-btn">+ New</button>
-    <button id="delete-session-btn">Del</button>
-  </header>
 
+  <!-- Login Screen -->
+  <div id="login-screen" class="screen" style="display:none">
+    <h2>Claude Dispatch</h2>
+    <p>Paste the token from the server terminal.</p>
+    <input type="text" id="token-input" placeholder="Token or full URL" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <button id="token-submit">Connect</button>
+  </div>
+
+  <!-- Session List Screen -->
+  <div id="session-screen" class="screen">
+    <header class="screen-header">
+      <span id="status-dot"></span>
+      <h1>Dispatch</h1>
+      <button id="new-session-btn">+ New</button>
+    </header>
+    <div id="session-list"></div>
+    <div id="empty-state">
+      <p>No sessions yet.</p>
+      <p>Tap <strong>+ New</strong> to start.</p>
+    </div>
+  </div>
+
+  <!-- Chat Screen -->
+  <div id="chat-screen" class="screen" style="display:none">
+    <header class="screen-header">
+      <button id="back-btn">&larr;</button>
+      <div id="chat-header-info">
+        <span id="chat-title"></span>
+        <span id="chat-subtitle"></span>
+      </div>
+      <button id="chat-delete-btn">Del</button>
+    </header>
+    <div id="thinking-bar" style="display:none">
+      <div class="thinking-dots"><span></span><span></span><span></span></div>
+      <span>Claude is thinking...</span>
+    </div>
+    <main id="chat-area"></main>
+    <footer>
+      <textarea id="prompt-input" rows="1" placeholder="Send a message..." disabled></textarea>
+      <button id="send-btn" disabled>Send</button>
+    </footer>
+  </div>
+
+  <!-- Directory Picker Modal -->
   <div id="dir-modal" style="display:none">
     <div class="modal-content">
       <h3>Select Project Directory</h3>
@@ -32,24 +68,17 @@
     </div>
   </div>
 
-  <div id="login-screen" style="display:none">
-    <h2>Claude Dispatch</h2>
-    <p>Paste the token from the server terminal.</p>
-    <input type="text" id="token-input" placeholder="Token" autocomplete="off" autocapitalize="off" spellcheck="false">
-    <button id="token-submit">Connect</button>
-  </div>
-
-  <main id="chat-area">
-    <div id="welcome">
-      <h2>Claude Dispatch</h2>
-      <p>Create a session to start chatting.</p>
+  <!-- Rename Modal -->
+  <div id="rename-modal" style="display:none">
+    <div class="modal-content">
+      <h3>Rename Session</h3>
+      <input type="text" id="rename-input" placeholder="Session name" autocomplete="off">
+      <div class="modal-actions">
+        <button id="rename-cancel">Cancel</button>
+        <button id="rename-confirm">Save</button>
+      </div>
     </div>
-  </main>
-
-  <footer>
-    <textarea id="prompt-input" rows="1" placeholder="Send a message..." disabled></textarea>
-    <button id="send-btn" disabled>Send</button>
-  </footer>
+  </div>
 
   <script src="/app.js"></script>
 </body>
