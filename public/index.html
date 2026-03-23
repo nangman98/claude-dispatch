@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0d1117">
+  <link rel="manifest" href="/manifest.json">
+  <title>Claude Dispatch</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <span id="status-dot"></span>
+    <select id="session-select">
+      <option value="" disabled selected>No sessions</option>
+    </select>
+    <button id="new-session-btn">+ New</button>
+    <button id="delete-session-btn">Del</button>
+  </header>
+
+  <main id="chat-area">
+    <div id="welcome">
+      <h2>Claude Dispatch</h2>
+      <p>Create a session to start chatting.</p>
+    </div>
+  </main>
+
+  <footer>
+    <textarea id="prompt-input" rows="1" placeholder="Send a message..." disabled></textarea>
+    <button id="send-btn" disabled>Send</button>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "claude-dispatch",
+  "version": "0.1.0",
+  "description": "Control Claude Code CLI from your phone via mobile-friendly PWA",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": ["claude", "claude-code", "dispatch", "mobile", "pwa"],
+  "author": "nangman98",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.1.0",
+    "ws": "^8.18.0"
+  }
+}
