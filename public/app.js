@@ -20,6 +20,11 @@
   const promptInput = document.getElementById('prompt-input');
   const sendBtn = document.getElementById('send-btn');
 
+  // -- DOM (login) --
+  const loginScreen = document.getElementById('login-screen');
+  const tokenInput = document.getElementById('token-input');
+  const tokenSubmit = document.getElementById('token-submit');
+
   // -- Init --
   function init() {
     // Extract token from URL or localStorage
@@ -33,10 +38,35 @@
       }
     }
     if (!token) {
-      showError('No auth token. Open the URL from the server terminal.');
+      showLoginScreen();
       return;
     }
 
+    connect();
+    bindEvents();
+  }
+
+  function showLoginScreen() {
+    loginScreen.style.display = '';
+    tokenSubmit.addEventListener('click', submitToken);
+    tokenInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') submitToken();
+    });
+    tokenInput.focus();
+  }
+
+  function submitToken() {
+    const val = tokenInput.value.trim();
+    if (!val) return;
+    // Support pasting full URL or just the token
+    try {
+      const url = new URL(val);
+      token = url.searchParams.get('token') || val;
+    } catch {
+      token = val;
+    }
+    localStorage.setItem('dispatch-token', token);
+    loginScreen.style.display = 'none';
     connect();
     bindEvents();
   }

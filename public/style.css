@@ -178,6 +178,65 @@ header button:active {
   50% { opacity: 0; }
 }
 
+/* Login screen */
+#login-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  z-index: 100;
+}
+
+#login-screen h2 {
+  color: var(--text);
+  font-size: 22px;
+}
+
+#login-screen p {
+  color: var(--text-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+#token-input {
+  width: 100%;
+  max-width: 360px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  font-size: 14px;
+  font-family: 'SF Mono', monospace;
+  outline: none;
+}
+
+#token-input:focus {
+  border-color: var(--accent);
+}
+
+#token-submit {
+  width: 100%;
+  max-width: 360px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#token-submit:active {
+  opacity: 0.8;
+}
+
 /* Welcome */
 #welcome {
   flex: 1;
