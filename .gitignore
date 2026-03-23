@@ -2,3 +2,4 @@ node_modules/
 .claude-dispatch-token
 .DS_Store
 dispatch.log
+.claude-dispatch-data/

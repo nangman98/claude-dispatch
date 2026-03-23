@@ -597,6 +597,66 @@
     termArea.scrollTop = termArea.scrollHeight;
   }
 
+  // ===== Theme =====
+  const themes = [
+    { name: 'Midnight', bg: '#0d1117', surface: '#161b22' },
+    { name: 'Ocean', bg: '#0a192f', surface: '#112240' },
+    { name: 'Forest', bg: '#0b1a0b', surface: '#142814' },
+    { name: 'Purple', bg: '#1a0a2e', surface: '#2d1b69' },
+    { name: 'Warm', bg: '#1c1410', surface: '#2a1f1a' },
+    { name: 'Slate', bg: '#1e293b', surface: '#334155' },
+    { name: 'Rose', bg: '#1a0a14', surface: '#2d1520' },
+    { name: 'Carbon', bg: '#171717', surface: '#262626' },
+  ];
+
+  const themeModal = document.getElementById('theme-modal');
+  const themeGrid = document.getElementById('theme-grid');
+  const customBg = document.getElementById('custom-bg');
+
+  function initThemes() {
+    themeGrid.innerHTML = '';
+    themes.forEach((t, i) => {
+      const el = document.createElement('div');
+      el.className = 'theme-swatch';
+      el.style.background = `linear-gradient(135deg, ${t.bg}, ${t.surface})`;
+      el.title = t.name;
+      el.addEventListener('click', () => applyTheme(t.bg, t.surface));
+      themeGrid.appendChild(el);
+    });
+
+    customBg.addEventListener('input', (e) => {
+      applyTheme(e.target.value, adjustColor(e.target.value, 15));
+    });
+
+    document.getElementById('theme-btn').addEventListener('click', () => { themeModal.style.display = ''; });
+    document.getElementById('theme-close').addEventListener('click', () => { themeModal.style.display = 'none'; });
+
+    // Load saved theme
+    const saved = localStorage.getItem('dispatch-theme');
+    if (saved) {
+      try {
+        const { bg, surface } = JSON.parse(saved);
+        applyTheme(bg, surface, false);
+      } catch {}
+    }
+  }
+
+  function applyTheme(bg, surface, save = true) {
+    document.documentElement.style.setProperty('--bg', bg);
+    document.documentElement.style.setProperty('--surface', surface);
+    if (save) localStorage.setItem('dispatch-theme', JSON.stringify({ bg, surface }));
+  }
+
+  function adjustColor(hex, amount) {
+    const num = parseInt(hex.slice(1), 16);
+    const r = Math.min(255, (num >> 16) + amount);
+    const g = Math.min(255, ((num >> 8) & 0xff) + amount);
+    const b = Math.min(255, (num & 0xff) + amount);
+    return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, '0')}`;
+  }
+
+  initThemes();
+
   // ===== iOS keyboard resize fix =====
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', () => {

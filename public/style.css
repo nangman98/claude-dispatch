@@ -577,6 +577,25 @@ footer {
   opacity: 0.8;
 }
 
+/* ===== Theme grid ===== */
+#theme-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.theme-swatch {
+  aspect-ratio: 1;
+  border-radius: 12px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.15s;
+}
+
+.theme-swatch.active {
+  border-color: var(--accent);
+}
+
 /* ===== Modals ===== */
 #dir-modal,
 #rename-modal {
