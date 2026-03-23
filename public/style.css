@@ -41,6 +41,7 @@ body {
   display: flex;
   flex-direction: column;
   background: var(--bg);
+  overflow: hidden;
 }
 
 .screen-header {
@@ -235,6 +236,7 @@ body {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  z-index: 10;
 }
 
 .tab {
@@ -340,6 +342,7 @@ body {
   border-bottom: 1px solid var(--border);
   font-size: 13px;
   color: var(--accent);
+  flex-shrink: 0;
 }
 
 .thinking-dots {
@@ -367,12 +370,17 @@ body {
 /* ===== Chat Area ===== */
 #chat-area {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+#term-area {
+  min-height: 0;
 }
 
 .message {
@@ -472,6 +480,7 @@ body {
   background: var(--surface);
   border-top: 1px solid var(--border);
   overflow-x: auto;
+  flex-shrink: 0;
 }
 
 #image-preview img {

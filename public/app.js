@@ -597,6 +597,21 @@
     termArea.scrollTop = termArea.scrollHeight;
   }
 
+  // ===== iOS keyboard resize fix =====
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+      const screen = document.getElementById('chat-screen');
+      if (screen.style.display !== 'none') {
+        screen.style.height = window.visualViewport.height + 'px';
+        scrollToBottom();
+      }
+    });
+    window.visualViewport.addEventListener('scroll', () => {
+      // prevent iOS from scrolling the viewport
+      window.scrollTo(0, 0);
+    });
+  }
+
   // ===== PWA =====
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
