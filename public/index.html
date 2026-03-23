@@ -20,6 +20,18 @@
     <button id="delete-session-btn">Del</button>
   </header>
 
+  <div id="dir-modal" style="display:none">
+    <div class="modal-content">
+      <h3>Select Project Directory</h3>
+      <div id="dir-current"></div>
+      <div id="dir-list"></div>
+      <div class="modal-actions">
+        <button id="dir-up">.. Parent</button>
+        <button id="dir-select">Use This Directory</button>
+      </div>
+    </div>
+  </div>
+
   <div id="login-screen" style="display:none">
     <h2>Claude Dispatch</h2>
     <p>Paste the token from the server terminal.</p>

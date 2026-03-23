@@ -20,6 +20,14 @@
   const promptInput = document.getElementById('prompt-input');
   const sendBtn = document.getElementById('send-btn');
 
+  // -- DOM (dir modal) --
+  const dirModal = document.getElementById('dir-modal');
+  const dirCurrent = document.getElementById('dir-current');
+  const dirList = document.getElementById('dir-list');
+  const dirUp = document.getElementById('dir-up');
+  const dirSelectBtn = document.getElementById('dir-select');
+  let selectedDir = '';
+
   // -- DOM (login) --
   const loginScreen = document.getElementById('login-screen');
   const tokenInput = document.getElementById('token-input');
@@ -201,21 +209,57 @@
     sessions.forEach((s) => {
       const opt = document.createElement('option');
       opt.value = s.id;
-      opt.textContent = `${s.name} (${s.messageCount})`;
+      const short = s.cwd ? s.cwd.split('/').pop() : s.name;
+      opt.textContent = `${short} (${s.messageCount})`;
       if (s.id === currentSessionId) opt.selected = true;
       sessionSelect.appendChild(opt);
     });
   }
 
   async function createSession() {
+    // Show directory picker
+    showDirModal();
+  }
+
+  function showDirModal() {
+    dirModal.style.display = '';
+    loadDirectories();
+  }
+
+  async function loadDirectories(dirPath) {
     try {
+      const query = dirPath ? `?path=${encodeURIComponent(dirPath)}` : '';
+      const res = await fetch(`/api/directories${query}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      selectedDir = data.current;
+      dirCurrent.textContent = data.current;
+
+      dirList.innerHTML = '';
+      data.directories.forEach((d) => {
+        const el = document.createElement('div');
+        el.className = 'dir-item';
+        el.textContent = d.name;
+        el.addEventListener('click', () => loadDirectories(d.path));
+        dirList.appendChild(el);
+      });
+
+      dirUp.onclick = () => loadDirectories(data.parent);
+    } catch {}
+  }
+
+  async function confirmCreateSession() {
+    dirModal.style.display = 'none';
+    try {
+      const name = selectedDir.split('/').pop() || 'Home';
       const res = await fetch('/api/sessions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ name, cwd: selectedDir }),
       });
       const session = await res.json();
       currentSessionId = session.id;
@@ -325,6 +369,7 @@
   function bindEvents() {
     newSessionBtn.addEventListener('click', createSession);
     deleteSessionBtn.addEventListener('click', deleteSession);
+    dirSelectBtn.addEventListener('click', confirmCreateSession);
 
     sessionSelect.addEventListener('change', (e) => {
       switchSession(e.target.value);

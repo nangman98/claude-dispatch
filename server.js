@@ -1,5 +1,7 @@
 const http = require('node:http');
 const os = require('node:os');
+const fs = require('node:fs');
+const path = require('node:path');
 const express = require('express');
 const { WebSocketServer } = require('ws');
 const { getOrCreateToken, authMiddleware, verifyWebSocket } = require('./lib/auth');
@@ -24,8 +26,22 @@ api.get('/sessions', (req, res) => {
 });
 
 api.post('/sessions', (req, res) => {
-  const session = store.create(req.body.name);
+  const session = store.create(req.body.name, req.body.cwd);
   res.json(session);
+});
+
+api.get('/directories', (req, res) => {
+  const dir = req.query.path || os.homedir();
+  try {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    const dirs = entries
+      .filter((e) => e.isDirectory() && !e.name.startsWith('.'))
+      .map((e) => ({ name: e.name, path: path.join(dir, e.name) }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    res.json({ current: dir, parent: path.dirname(dir), directories: dirs });
+  } catch {
+    res.status(400).json({ error: 'Cannot read directory' });
+  }
 });
 
 api.get('/sessions/:id/messages', (req, res) => {
@@ -109,7 +125,7 @@ function handlePrompt(ws, msg) {
 
   const isFirstMessage = !session.hasMessages || session.messages.filter(m => m.role === 'user').length <= 1;
 
-  runner.run(sessionId, text, isFirstMessage, {
+  runner.run(sessionId, text, isFirstMessage, session.cwd, {
     onToken(token) {
       if (ws.readyState === ws.OPEN) {
         ws.send(JSON.stringify({ type: 'token', sessionId, text: token }));
