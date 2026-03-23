@@ -25,61 +25,58 @@ A lightweight DIY alternative to Claude's official Dispatch feature — runs ent
 - Node.js 18+
 - [Tailscale](https://tailscale.com/) (free) — for remote access outside your local network
 
-## Setup
-
-### 1. Install Claude Dispatch
+## Quick Start
 
 ```bash
 git clone https://github.com/nangman98/claude-dispatch.git
 cd claude-dispatch
-npm install
+bash setup.sh
 ```
 
-### 2. Set up Tailscale (for remote access)
+That's it. The setup script will:
+- Install dependencies
+- Register a background service (macOS LaunchAgent)
+- Auto-start the server (and restart on crash)
+- Print the URL to open on your phone
 
-Skip this step if you only need access on the same Wi-Fi network.
+The server **auto-starts on login** — no manual steps after setup.
+
+### Remote Access with Tailscale
+
+To access from outside your local network:
 
 1. **Mac**: Install [Tailscale](https://tailscale.com/download) and sign in
 2. **Phone**: Install Tailscale from [App Store](https://apps.apple.com/app/tailscale/id1470499037) or [Google Play](https://play.google.com/store/apps/details?id=com.tailscale.ipn) — sign in with the same account
-3. Confirm your Mac's Tailscale IP:
-   ```bash
-   # macOS (App Store version)
-   /Applications/Tailscale.app/Contents/MacOS/Tailscale ip -4
+3. Use the Tailscale URL printed by `setup.sh` instead of the local one
 
-   # or via CLI (brew install tailscale)
-   tailscale ip -4
-   ```
-
-### 3. Start the server
-
-```bash
-npm start
-```
-
-Output:
-
-```
-Claude Dispatch is running!
-
-  Local:   http://localhost:3456?token=abc123...
-  Network: http://192.168.1.42:3456?token=abc123...
-```
-
-### 4. Open on your phone
+### Open on your phone
 
 | Access | URL to open |
 |--------|-------------|
-| Same Wi-Fi | `http://<local-ip>:3456?token=<token>` (Network URL from terminal) |
+| Same Wi-Fi | `http://<local-ip>:3456?token=<token>` |
 | Remote (Tailscale) | `http://<tailscale-ip>:3456?token=<token>` |
 
 The auth token is saved in your phone's browser automatically after the first visit.
 
-### 5. Add to Home Screen (PWA)
+### Add to Home Screen (PWA)
 
 For an app-like experience without the browser address bar:
 
 - **iPhone (Safari)**: Tap **Share** (□↑) → **Add to Home Screen**
 - **Android (Chrome)**: Tap **Menu** (⋮) → **Add to Home Screen**
+
+### Service Management
+
+```bash
+# Stop
+launchctl unload ~/Library/LaunchAgents/com.claude-dispatch.plist
+
+# Restart
+launchctl unload ~/Library/LaunchAgents/com.claude-dispatch.plist && launchctl load ~/Library/LaunchAgents/com.claude-dispatch.plist
+
+# Logs
+tail -f ~/claude-dispatch/dispatch.log
+```
 
 ## Usage
 
