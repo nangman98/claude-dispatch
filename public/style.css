@@ -648,8 +648,8 @@ footer {
 }
 
 .modal-content {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: #161b22;
+  border: 1px solid #30363d;
   border-radius: 16px;
   padding: 20px;
   width: 100%;
@@ -667,11 +667,11 @@ footer {
 
 #dir-current {
   font-size: 12px;
-  color: var(--accent);
+  color: #58a6ff;
   font-family: 'SF Mono', monospace;
   word-break: break-all;
   padding: 8px;
-  background: var(--bg);
+  background: #0d1117;
   border-radius: 8px;
 }
 
@@ -685,11 +685,11 @@ footer {
 
 .dir-item {
   padding: 10px 12px;
-  background: var(--bg);
+  background: #0d1117;
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
-  color: var(--text);
+  color: #e6edf3;
 }
 
 .dir-item:active {
