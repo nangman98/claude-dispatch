@@ -113,6 +113,7 @@ api.post('/sessions/:id/prompt', (req, res) => {
 
   store.addMessage(req.params.id, 'user', text);
   store.setRunning(req.params.id, true);
+  broadcast({ type: 'session_update', sessionId: req.params.id, isRunning: true });
 
   const isFirstMessage = !session.hasMessages || session.messages.filter(m => m.role === 'user').length <= 1;
   const options = { model: session.model };
@@ -126,13 +127,79 @@ api.post('/sessions/:id/prompt', (req, res) => {
         duration_ms: result.duration_ms,
       });
       store.setRunning(req.params.id, false);
+      store.setError(req.params.id, null);
+      broadcast({ type: 'session_update', sessionId: req.params.id, isRunning: false });
       res.json(result);
     },
     onError(message) {
       store.setRunning(req.params.id, false);
+      store.setError(req.params.id, message);
+      broadcast({ type: 'session_update', sessionId: req.params.id, isRunning: false });
+      broadcast({ type: 'watchdog', sessionId: req.params.id, sessionName: session.name, error: message, timestamp: Date.now() });
       res.status(500).json({ error: message });
     },
     onStatus() {},
+  });
+});
+
+// Briefing
+api.get('/briefing', (req, res) => {
+  const allSessions = store.list();
+  const now = Date.now();
+  const day = 86400000;
+  let cost24h = 0;
+  let msgCount24h = 0;
+  let sessionIds24h = new Set();
+
+  for (const s of allSessions) {
+    const msgs = store.getMessages(s.id);
+    for (const m of msgs) {
+      if (m.timestamp > now - day) {
+        msgCount24h++;
+        if (m.cost) cost24h += m.cost;
+        sessionIds24h.add(s.id);
+      }
+    }
+  }
+
+  const hour = new Date().getHours();
+  let greeting;
+  if (hour >= 5 && hour < 12) greeting = 'Good morning';
+  else if (hour >= 12 && hour < 17) greeting = 'Good afternoon';
+  else if (hour >= 17 && hour < 21) greeting = 'Good evening';
+  else greeting = 'Good night';
+
+  const runningSessions = allSessions
+    .filter((s) => s.isRunning)
+    .map((s) => ({ id: s.id, name: s.name }));
+
+  // Most recent message
+  let recentSummary = '';
+  const allMsgs = [];
+  for (const s of allSessions) {
+    const msgs = store.getMessages(s.id);
+    if (msgs.length > 0) {
+      const last = msgs[msgs.length - 1];
+      allMsgs.push({ sessionName: s.name, ...last });
+    }
+  }
+  allMsgs.sort((a, b) => b.timestamp - a.timestamp);
+  if (allMsgs.length > 0) {
+    const m = allMsgs[0];
+    const ago = Math.floor((now - m.timestamp) / 60000);
+    const agoText = ago < 1 ? 'just now' : ago < 60 ? `${ago}m ago` : `${Math.floor(ago / 60)}h ago`;
+    recentSummary = `Last: ${m.sessionName} (${agoText})`;
+  }
+
+  res.json({
+    greeting,
+    runningSessions,
+    last24h: {
+      sessionCount: sessionIds24h.size,
+      messageCount: msgCount24h,
+      cost: Math.round(cost24h * 10000) / 10000,
+    },
+    recentSummary,
   });
 });
 
@@ -267,6 +334,14 @@ wss.on('connection', (ws) => {
   });
 });
 
+// Broadcast to all connected WebSocket clients
+function broadcast(data) {
+  const msg = JSON.stringify(data);
+  wss.clients.forEach((client) => {
+    if (client.readyState === 1) client.send(msg);
+  });
+}
+
 function handlePrompt(ws, msg) {
   const { sessionId, text } = msg;
   if (!sessionId || !text) {
@@ -287,6 +362,7 @@ function handlePrompt(ws, msg) {
 
   store.addMessage(sessionId, 'user', text);
   store.setRunning(sessionId, true);
+  broadcast({ type: 'session_update', sessionId, isRunning: true });
 
   const isFirstMessage = !session.hasMessages || session.messages.filter(m => m.role === 'user').length <= 1;
 
@@ -304,6 +380,8 @@ function handlePrompt(ws, msg) {
         duration_ms: result.duration_ms,
       });
       store.setRunning(sessionId, false);
+      store.setError(sessionId, null);
+      broadcast({ type: 'session_update', sessionId, isRunning: false });
       if (ws.readyState === ws.OPEN) {
         ws.send(JSON.stringify({
           type: 'assistant_complete',
@@ -316,6 +394,9 @@ function handlePrompt(ws, msg) {
     },
     onError(message) {
       store.setRunning(sessionId, false);
+      store.setError(sessionId, message);
+      broadcast({ type: 'session_update', sessionId, isRunning: false });
+      broadcast({ type: 'watchdog', sessionId, sessionName: session.name, error: message, timestamp: Date.now() });
       if (ws.readyState === ws.OPEN) {
         ws.send(JSON.stringify({ type: 'error', sessionId, message }));
       }

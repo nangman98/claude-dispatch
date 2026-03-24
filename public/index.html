@@ -8,7 +8,7 @@
   <meta name="theme-color" content="#0d1117">
   <link rel="manifest" href="/manifest.json">
   <title>Claude Dispatch</title>
-  <link rel="stylesheet" href="/style.css?v=2">
+  <link rel="stylesheet" href="/style.css?v=3">
 </head>
 <body>
 
@@ -29,6 +29,8 @@
       <button id="theme-btn">Theme</button>
       <button id="new-session-btn">+ New</button>
     </header>
+    <div id="watchdog-banner" style="display:none"></div>
+    <div id="briefing-card"></div>
     <div id="session-list"></div>
     <div id="empty-state">
       <p>No sessions yet.</p>
@@ -167,6 +169,6 @@
       caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
     }
   </script>
-  <script src="/app.js?v=2"></script>
+  <script src="/app.js?v=3"></script>
 </body>
 </html>

@@ -86,7 +86,7 @@
     showScreen('sessions');
     connect();
     bindEvents();
-    loadSessions(); // also load via REST in case WebSocket is slow
+    loadSessions().then(() => loadBriefing());
   }
 
   function showScreen(name) {
@@ -144,57 +144,91 @@
             streamingText = '';
           }
           scrollToBottom();
+          setThinking(false);
+          enableInput();
         }
-        setThinking(false);
-        enableInput();
+        updateGlobalStatus();
         loadSessions();
-        loadCommands(); // refresh after first response caches them
+        loadCommands();
         break;
 
       case 'status':
-        if (msg.status === 'thinking') {
-          statusDot.className = 'connected thinking';
-          setThinking('Claude is thinking...');
-        } else if (msg.status === 'responding') {
-          statusDot.className = 'connected thinking';
-          setThinking('Responding...');
-        } else if (msg.status === 'tool') {
-          statusDot.className = 'connected thinking';
-          const toolLabels = {
-            Bash: 'Running command...',
-            Read: 'Reading file...',
-            Write: 'Writing file...',
-            Edit: 'Editing file...',
-            Glob: 'Searching files...',
-            Grep: 'Searching code...',
-            WebFetch: 'Fetching web...',
-            WebSearch: 'Searching web...',
-            Agent: 'Running agent...',
-          };
-          setThinking(toolLabels[msg.tool] || `Using ${msg.tool}...`);
-        } else {
-          statusDot.className = 'connected';
-          setThinking(false);
-          if (msg.status === 'idle' || msg.status === 'aborted') {
-            enableInput();
-            if (msg.status === 'aborted' && streamingBubble) {
-              streamingBubble.querySelector('.content').classList.remove('typing-indicator');
-              streamingBubble = null;
-              streamingText = '';
+        if (msg.sessionId === currentSessionId) {
+          if (msg.status === 'thinking') {
+            setThinking('Claude is thinking...');
+          } else if (msg.status === 'responding') {
+            setThinking('Responding...');
+          } else if (msg.status === 'tool') {
+            const toolLabels = {
+              Bash: 'Running command...',
+              Read: 'Reading file...',
+              Write: 'Writing file...',
+              Edit: 'Editing file...',
+              Glob: 'Searching files...',
+              Grep: 'Searching code...',
+              WebFetch: 'Fetching web...',
+              WebSearch: 'Searching web...',
+              Agent: 'Running agent...',
+            };
+            setThinking(toolLabels[msg.tool] || `Using ${msg.tool}...`);
+          } else {
+            setThinking(false);
+            if (msg.status === 'idle' || msg.status === 'aborted') {
+              enableInput();
+              if (msg.status === 'aborted' && streamingBubble) {
+                streamingBubble.querySelector('.content').classList.remove('typing-indicator');
+                streamingBubble = null;
+                streamingText = '';
+              }
             }
           }
         }
+        updateGlobalStatus();
         break;
 
       case 'error':
         if (!msg.sessionId || msg.sessionId === currentSessionId) {
           addBubble('error', msg.message);
           scrollToBottom();
+          setThinking(false);
+          enableInput();
         }
-        setThinking(false);
-        enableInput();
+        break;
+
+      case 'session_update': {
+        const s = sessions.find((s) => s.id === msg.sessionId);
+        if (s) s.isRunning = msg.isRunning;
+        renderSessionList();
+        updateGlobalStatus();
+        break;
+      }
+
+      case 'watchdog':
+        showWatchdogAlert(msg);
         break;
     }
+  }
+
+  function updateGlobalStatus() {
+    const anyRunning = sessions.some((s) => s.isRunning);
+    if (ws?.readyState === WebSocket.OPEN) {
+      statusDot.className = anyRunning ? 'connected thinking' : 'connected';
+    }
+  }
+
+  // ===== Watchdog =====
+  let watchdogTimer = null;
+
+  function showWatchdogAlert(msg) {
+    const banner = document.getElementById('watchdog-banner');
+    banner.textContent = `${msg.sessionName}: ${msg.error.slice(0, 100)}`;
+    banner.style.display = '';
+    banner.onclick = () => {
+      banner.style.display = 'none';
+      openChat(msg.sessionId);
+    };
+    clearTimeout(watchdogTimer);
+    watchdogTimer = setTimeout(() => { banner.style.display = 'none'; }, 8000);
   }
 
   function setThinking(text) {
@@ -237,6 +271,7 @@
         </div>
         <div class="session-meta">
           <div class="session-time">${time}</div>
+          ${s.lastError ? '<div class="session-badge error">error</div>' : ''}
           ${s.isRunning ? '<div class="session-badge">running</div>' : ''}
         </div>
       `;
@@ -510,6 +545,42 @@
     setThinking(false);
     enableInput();
     loadSessions();
+  }
+
+  // ===== Briefing =====
+  async function loadBriefing() {
+    const dismissed = localStorage.getItem('dispatch-briefing-dismissed');
+    if (dismissed === new Date().toDateString()) return;
+
+    const card = document.getElementById('briefing-card');
+    try {
+      const res = await fetch('/api/briefing', { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+
+      let lines = [`<strong>${data.greeting}</strong>`];
+      if (data.last24h.messageCount > 0) {
+        lines.push(`${data.last24h.sessionCount} sessions, ${data.last24h.messageCount} messages, $${data.last24h.cost} in last 24h`);
+      } else {
+        lines.push('No activity in last 24h');
+      }
+      if (data.runningSessions.length > 0) {
+        lines.push(`Running: ${data.runningSessions.map((s) => s.name).join(', ')}`);
+      }
+      if (data.recentSummary) lines.push(data.recentSummary);
+
+      card.innerHTML = `
+        <div class="briefing-text">${lines.join('<br>')}</div>
+        <button class="briefing-dismiss" id="briefing-dismiss">&times;</button>
+      `;
+      card.style.display = '';
+      document.getElementById('briefing-dismiss').addEventListener('click', (e) => {
+        e.stopPropagation();
+        card.style.display = 'none';
+        localStorage.setItem('dispatch-briefing-dismissed', new Date().toDateString());
+      });
+    } catch {
+      card.style.display = 'none';
+    }
   }
 
   // ===== Dashboard =====

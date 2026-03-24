@@ -802,6 +802,60 @@ footer {
   opacity: 0.8;
 }
 
+/* ===== Watchdog Banner ===== */
+#watchdog-banner {
+  background: var(--danger);
+  color: #fff;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===== Briefing Card ===== */
+#briefing-card {
+  margin: 10px 12px;
+  background: var(--surface);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  position: relative;
+  display: none;
+  flex-shrink: 0;
+}
+
+.briefing-text {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.briefing-text strong {
+  font-size: 16px;
+  color: var(--text);
+}
+
+.briefing-dismiss {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+/* ===== Error Badge ===== */
+.session-badge.error {
+  background: var(--danger);
+}
+
 /* ===== Dashboard ===== */
 #dashboard-content {
   flex: 1;
