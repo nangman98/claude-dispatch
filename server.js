@@ -1,3 +1,4 @@
+require('dotenv').config();
 const http = require('node:http');
 const os = require('node:os');
 const fs = require('node:fs');
@@ -8,6 +9,7 @@ const { WebSocketServer } = require('ws');
 const { getOrCreateToken, authMiddleware, verifyWebSocket } = require('./lib/auth');
 const SessionStore = require('./lib/session-store');
 const ClaudeRunner = require('./lib/claude-runner');
+const SlackBot = require('./lib/slack-bot');
 
 const PORT = process.env.PORT || 3456;
 const token = getOrCreateToken();
@@ -290,6 +292,10 @@ server.listen(PORT, '0.0.0.0', () => {
   try {
     printQR(url);
   } catch {}
+
+  // Start Slack bot (if configured)
+  const slackBot = new SlackBot();
+  slackBot.start();
 });
 
 // Minimal QR-like display (just the URL, since qrcode lib isn't a dependency)

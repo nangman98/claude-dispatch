@@ -24,6 +24,7 @@ A lightweight DIY alternative to Claude's official Dispatch feature — runs ent
 - **Mobile-first PWA** — add to home screen for app-like experience
 - **Token auth** — secure access with auto-generated token
 - **Remote access** — use from anywhere via Tailscale
+- **Slack bot** — use Claude Code from Slack DMs or @mentions (optional)
 - **Auto-start** — runs as background service on macOS / Windows
 
 ## Requirements
@@ -83,6 +84,28 @@ For an app-like experience without the browser address bar:
 
 - **iPhone (Safari)**: Tap **Share** (□↑) → **Add to Home Screen**
 - **Android (Chrome)**: Tap **Menu** (⋮) → **Add to Home Screen**
+
+### Slack Bot (optional)
+
+Use Claude Code from Slack — DMs or @mentions in channels.
+
+1. Create a Slack App at [api.slack.com/apps](https://api.slack.com/apps)
+2. Enable **Socket Mode** and get an App-Level Token (`xapp-...`)
+3. Add Bot Token Scopes: `chat:write`, `reactions:write`, `channels:history`, `im:history`, `app_mention:read`
+4. Subscribe to events: `message.im`, `app_mention`
+5. Install to workspace and copy Bot Token (`xoxb-...`)
+6. Create `.env` in the project directory:
+   ```
+   SLACK_BOT_TOKEN=xoxb-your-token
+   SLACK_APP_TOKEN=xapp-your-token
+   ```
+7. Restart the server
+
+The bot will:
+- Process DMs automatically
+- Respond to @mentions in channels
+- Show ⏳ while thinking, ✅ when done
+- Maintain per-thread conversation sessions
 
 ### Service Management
 
