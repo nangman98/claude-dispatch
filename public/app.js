@@ -559,7 +559,10 @@
     renameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmRename(); });
     tabBar.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => switchTab(t.dataset.tab)));
     termRunBtn.addEventListener('click', runTermCommand);
-    termInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') runTermCommand(); });
+    termInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') runTermCommand();
+      if (e.key === 'Tab') { e.preventDefault(); handleTabComplete(); }
+    });
     fileInput.addEventListener('change', handleFileSelect);
     sendBtn.addEventListener('click', sendPrompt);
     promptInput.addEventListener('keydown', (e) => {
@@ -594,6 +597,59 @@
     if (tab === 'term') termInput.focus();
     else promptInput.focus();
   }
+
+  let tabMatches = [];
+  let tabIndex = -1;
+  let tabOriginal = '';
+
+  async function handleTabComplete() {
+    const input = termInput.value;
+    const session = sessions.find((s) => s.id === currentSessionId);
+    const cwd = session?.cwd || '';
+
+    if (tabMatches.length > 0 && tabOriginal) {
+      // Cycle through matches
+      tabIndex = (tabIndex + 1) % tabMatches.length;
+      const parts = tabOriginal.split(' ');
+      parts[parts.length - 1] = tabMatches[tabIndex];
+      termInput.value = parts.join(' ');
+      return;
+    }
+
+    // Fetch matches
+    tabOriginal = input;
+    tabIndex = 0;
+    try {
+      const res = await fetch(`/api/complete?input=${encodeURIComponent(input)}&cwd=${encodeURIComponent(cwd)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      tabMatches = await res.json();
+      if (tabMatches.length === 1) {
+        const parts = input.split(' ');
+        parts[parts.length - 1] = tabMatches[0];
+        termInput.value = parts.join(' ');
+        tabMatches = [];
+        tabOriginal = '';
+      } else if (tabMatches.length > 1) {
+        const parts = input.split(' ');
+        parts[parts.length - 1] = tabMatches[0];
+        termInput.value = parts.join(' ');
+        // Show matches in terminal output
+        const block = document.createElement('div');
+        block.className = 'term-block';
+        block.innerHTML = `<div class="term-out" style="color:var(--text-muted)">${tabMatches.join('  ')}</div>`;
+        termOutput.appendChild(block);
+        termArea.scrollTop = termArea.scrollHeight;
+      }
+    } catch {}
+  }
+
+  // Reset tab state on any other input
+  termInput.addEventListener('input', () => {
+    tabMatches = [];
+    tabIndex = -1;
+    tabOriginal = '';
+  });
 
   async function runTermCommand() {
     const cmd = termInput.value.trim();

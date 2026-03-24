@@ -136,6 +136,22 @@ api.post('/sessions/:id/prompt', (req, res) => {
   });
 });
 
+// Terminal tab-completion
+api.get('/complete', (req, res) => {
+  const { input, cwd } = req.query;
+  if (!input) return res.json([]);
+  const { exec } = require('node:child_process');
+  // Use compgen for command/file completion
+  const parts = input.split(' ');
+  const last = parts[parts.length - 1] || '';
+  const dir = cwd || os.homedir();
+  // List matching files/dirs
+  exec(`cd ${JSON.stringify(dir)} && compgen -f -- ${JSON.stringify(last)} 2>/dev/null | head -20`, { shell: '/bin/bash' }, (err, stdout) => {
+    const matches = stdout ? stdout.trim().split('\n').filter(Boolean) : [];
+    res.json(matches);
+  });
+});
+
 app.use('/api', api);
 
 // HTTP server
