@@ -16,6 +16,7 @@
   const loginScreen = document.getElementById('login-screen');
   const sessionScreen = document.getElementById('session-screen');
   const chatScreen = document.getElementById('chat-screen');
+  const dashboardScreen = document.getElementById('dashboard-screen');
 
   // -- DOM: Login --
   const tokenInput = document.getElementById('token-input');
@@ -92,6 +93,7 @@
     loginScreen.style.display = name === 'login' ? '' : 'none';
     sessionScreen.style.display = name === 'sessions' ? '' : 'none';
     chatScreen.style.display = name === 'chat' ? '' : 'none';
+    dashboardScreen.style.display = name === 'dashboard' ? '' : 'none';
   }
 
   // ===== WebSocket =====
@@ -510,6 +512,85 @@
     loadSessions();
   }
 
+  // ===== Dashboard =====
+  async function openDashboard() {
+    showScreen('dashboard');
+    const overview = document.getElementById('dash-overview');
+    const activity = document.getElementById('dash-activity');
+    const memory = document.getElementById('dash-memory');
+    const system = document.getElementById('dash-system');
+
+    overview.innerHTML = '<div class="dash-empty">Loading...</div>';
+    activity.innerHTML = '';
+    memory.innerHTML = '';
+    system.innerHTML = '';
+
+    try {
+      const res = await fetch('/api/dashboard', { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+
+      // Overview cards
+      overview.innerHTML = `
+        <div class="dash-card"><div class="card-label">Sessions</div><div class="card-value">${data.sessions.total}</div></div>
+        <div class="dash-card"><div class="card-label">Running</div><div class="card-value success">${data.sessions.running}</div></div>
+        <div class="dash-card"><div class="card-label">Messages</div><div class="card-value">${data.sessions.totalMessages}</div></div>
+        <div class="dash-card"><div class="card-label">Total Cost</div><div class="card-value accent">$${data.sessions.totalCost}</div></div>
+      `;
+
+      // Recent activity
+      if (data.recentActivity.length === 0) {
+        activity.innerHTML = '<div class="dash-empty">No activity yet</div>';
+      } else {
+        data.recentActivity.forEach((a) => {
+          const el = document.createElement('div');
+          el.className = 'dash-activity-item';
+          el.innerHTML = `
+            <div class="activity-dot ${a.role}"></div>
+            <div class="activity-body">
+              <div class="activity-header">
+                <span class="activity-session">${escapeHtml(a.sessionName)}</span>
+                <span class="activity-time">${formatTime(a.timestamp)}</span>
+              </div>
+              <div class="activity-text">${escapeHtml(a.text)}</div>
+            </div>
+          `;
+          activity.appendChild(el);
+        });
+      }
+
+      // Memory files
+      if (data.memoryFiles.length === 0) {
+        memory.innerHTML = '<div class="dash-empty">No memory files found</div>';
+      } else {
+        data.memoryFiles.forEach((m) => {
+          const el = document.createElement('div');
+          el.className = 'dash-memory-item';
+          // Extract description from frontmatter
+          const descMatch = m.content.match(/description:\s*(.+)/);
+          const desc = descMatch ? descMatch[1].trim() : '';
+          el.innerHTML = `
+            <div class="mem-name">${escapeHtml(m.name)}</div>
+            ${desc ? `<div class="mem-preview">${escapeHtml(desc)}</div>` : ''}
+          `;
+          el.addEventListener('click', () => el.classList.toggle('expanded'));
+          memory.appendChild(el);
+        });
+      }
+
+      // System info
+      const uptimeH = Math.floor(data.system.uptime / 3600);
+      const uptimeM = Math.floor((data.system.uptime % 3600) / 60);
+      system.innerHTML = `
+        <div class="dash-card"><div class="card-label">Host</div><div class="card-value small">${escapeHtml(data.system.hostname)}</div></div>
+        <div class="dash-card"><div class="card-label">Platform</div><div class="card-value small">${escapeHtml(data.system.platform)}</div></div>
+        <div class="dash-card"><div class="card-label">Uptime</div><div class="card-value small">${uptimeH}h ${uptimeM}m</div></div>
+        <div class="dash-card"><div class="card-label">Node</div><div class="card-value small">${escapeHtml(data.system.nodeVersion)}</div></div>
+      `;
+    } catch {
+      overview.innerHTML = '<div class="dash-empty">Failed to load dashboard</div>';
+    }
+  }
+
   // ===== Markdown (minimal) =====
   function renderMarkdown(text) {
     if (!text) return '';
@@ -540,6 +621,8 @@
   // ===== Events =====
   function bindEvents() {
     newSessionBtn.addEventListener('click', createSession);
+    document.getElementById('dashboard-btn').addEventListener('click', openDashboard);
+    document.getElementById('dash-back-btn').addEventListener('click', () => { showScreen('sessions'); });
     dirSelectBtn.addEventListener('click', confirmCreateSession);
     backBtn.addEventListener('click', () => { showScreen('sessions'); loadSessions(); });
     chatDeleteBtn.addEventListener('click', deleteCurrentSession);

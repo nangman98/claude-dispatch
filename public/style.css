@@ -801,3 +801,157 @@ footer {
 #token-submit:active {
   opacity: 0.8;
 }
+
+/* ===== Dashboard ===== */
+#dashboard-content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.dash-section h2 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.dash-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.dash-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.dash-card .card-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.dash-card .card-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 4px;
+}
+
+.dash-card .card-value.accent {
+  color: var(--accent);
+}
+
+.dash-card .card-value.success {
+  color: var(--success);
+}
+
+.dash-card .card-value.small {
+  font-size: 14px;
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.dash-activity-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 6px;
+}
+
+.dash-activity-item .activity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+
+.dash-activity-item .activity-dot.user {
+  background: var(--user-bubble);
+}
+
+.dash-activity-item .activity-dot.assistant {
+  background: var(--accent);
+}
+
+.dash-activity-item .activity-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.dash-activity-item .activity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.dash-activity-item .activity-session {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.dash-activity-item .activity-time {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.dash-activity-item .activity-text {
+  font-size: 13px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dash-memory-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.dash-memory-item .mem-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  font-family: 'SF Mono', monospace;
+}
+
+.dash-memory-item .mem-preview {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  white-space: pre-wrap;
+  max-height: 60px;
+  overflow: hidden;
+}
+
+.dash-memory-item.expanded .mem-preview {
+  max-height: none;
+}
+
+.dash-empty {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 12px;
+  text-align: center;
+}

@@ -136,6 +136,75 @@ api.post('/sessions/:id/prompt', (req, res) => {
   });
 });
 
+// Dashboard
+api.get('/dashboard', (req, res) => {
+  const allSessions = store.list();
+  const allMessages = [];
+  let totalCost = 0;
+
+  for (const s of allSessions) {
+    const msgs = store.getMessages(s.id);
+    for (const m of msgs) {
+      if (m.cost) totalCost += m.cost;
+      allMessages.push({ sessionId: s.id, sessionName: s.name, ...m });
+    }
+  }
+
+  // Recent activity (last 10 messages across all sessions)
+  const recentActivity = allMessages
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .slice(0, 10)
+    .map((m) => ({
+      sessionName: m.sessionName,
+      role: m.role,
+      text: m.text.slice(0, 120),
+      timestamp: m.timestamp,
+      cost: m.cost || 0,
+    }));
+
+  // Memory files
+  let memoryFiles = [];
+  try {
+    const memDir = path.join(os.homedir(), '.claude', 'projects');
+    const walkMemory = (dir, depth = 0) => {
+      if (depth > 3) return;
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const e of entries) {
+        const full = path.join(dir, e.name);
+        if (e.isDirectory() && e.name === 'memory') {
+          const files = fs.readdirSync(full).filter((f) => f.endsWith('.md'));
+          for (const f of files) {
+            try {
+              const content = fs.readFileSync(path.join(full, f), 'utf-8');
+              memoryFiles.push({ name: f, content: content.slice(0, 500) });
+            } catch {}
+          }
+        } else if (e.isDirectory() && !e.name.startsWith('.')) {
+          walkMemory(full, depth + 1);
+        }
+      }
+    };
+    walkMemory(memDir);
+  } catch {}
+
+  res.json({
+    sessions: {
+      total: allSessions.length,
+      running: allSessions.filter((s) => s.isRunning).length,
+      totalMessages: allMessages.length,
+      totalCost: Math.round(totalCost * 10000) / 10000,
+    },
+    recentActivity,
+    memoryFiles,
+    system: {
+      hostname: os.hostname(),
+      platform: `${os.type()} ${os.arch()}`,
+      uptime: Math.floor(os.uptime()),
+      nodeVersion: process.version,
+    },
+  });
+});
+
 // Terminal tab-completion
 api.get('/complete', (req, res) => {
   const { input, cwd } = req.query;

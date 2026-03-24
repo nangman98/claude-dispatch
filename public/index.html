@@ -25,6 +25,7 @@
     <header class="screen-header">
       <span id="status-dot"></span>
       <h1>Dispatch</h1>
+      <button id="dashboard-btn">Dashboard</button>
       <button id="theme-btn">Theme</button>
       <button id="new-session-btn">+ New</button>
     </header>
@@ -32,6 +33,32 @@
     <div id="empty-state">
       <p>No sessions yet.</p>
       <p>Tap <strong>+ New</strong> to start.</p>
+    </div>
+  </div>
+
+  <!-- Dashboard Screen -->
+  <div id="dashboard-screen" class="screen" style="display:none">
+    <header class="screen-header">
+      <button id="dash-back-btn">&larr;</button>
+      <h1>Dashboard</h1>
+    </header>
+    <div id="dashboard-content">
+      <div class="dash-section">
+        <h2>Overview</h2>
+        <div class="dash-cards" id="dash-overview"></div>
+      </div>
+      <div class="dash-section">
+        <h2>Recent Activity</h2>
+        <div id="dash-activity"></div>
+      </div>
+      <div class="dash-section">
+        <h2>Memory</h2>
+        <div id="dash-memory"></div>
+      </div>
+      <div class="dash-section">
+        <h2>System</h2>
+        <div class="dash-cards" id="dash-system"></div>
+      </div>
     </div>
   </div>
 
