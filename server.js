@@ -106,7 +106,7 @@ api.post('/exec', (req, res) => {
 
 // REST-based prompt (fallback when WebSocket doesn't work)
 api.post('/sessions/:id/prompt', (req, res) => {
-  const { text, images } = req.body;
+  const { text, images, planMode } = req.body;
   const session = store.get(req.params.id);
   if (!session) return res.status(404).json({ error: 'Session not found' });
   if (session.isRunning) return res.status(409).json({ error: 'Session is busy' });
@@ -116,7 +116,7 @@ api.post('/sessions/:id/prompt', (req, res) => {
   broadcast({ type: 'session_update', sessionId: req.params.id, isRunning: true });
 
   const isFirstMessage = !session.hasMessages || session.messages.filter(m => m.role === 'user').length <= 1;
-  const options = { model: session.model };
+  const options = { model: session.model, planMode };
 
   let fullText = '';
   runner.run(req.params.id, text, isFirstMessage, session.cwd, images || [], options, {
@@ -343,7 +343,7 @@ function broadcast(data) {
 }
 
 function handlePrompt(ws, msg) {
-  const { sessionId, text } = msg;
+  const { sessionId, text, planMode } = msg;
   if (!sessionId || !text) {
     ws.send(JSON.stringify({ type: 'error', message: 'Missing sessionId or text' }));
     return;
@@ -367,7 +367,7 @@ function handlePrompt(ws, msg) {
   const isFirstMessage = !session.hasMessages || session.messages.filter(m => m.role === 'user').length <= 1;
 
   const images = msg.images || [];
-  const options = { model: session.model };
+  const options = { model: session.model, planMode };
   runner.run(sessionId, text, isFirstMessage, session.cwd, images, options, {
     onToken(token) {
       if (ws.readyState === ws.OPEN) {

@@ -11,6 +11,11 @@
   let streamingBubble = null;
   let streamingText = '';
   let selectedDir = '';
+  let planMode = false;
+
+  function isMobile() {
+    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || ('ontouchstart' in window && window.innerWidth < 768);
+  }
 
   // -- DOM: Screens --
   const loginScreen = document.getElementById('login-screen');
@@ -509,7 +514,7 @@
 
     // Try WebSocket first, fallback to REST
     if (ws?.readyState === WebSocket.OPEN) {
-      const msg = { type: 'prompt', sessionId: currentSessionId, text: prompt };
+      const msg = { type: 'prompt', sessionId: currentSessionId, text: prompt, planMode };
       if (images) msg.images = images;
       wsSend(msg);
     } else {
@@ -523,7 +528,7 @@
       const res = await fetch(`/api/sessions/${currentSessionId}/prompt`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ text, images }),
+        body: JSON.stringify({ text, images, planMode }),
       });
       const result = await res.json();
       if (res.ok) {
@@ -718,9 +723,15 @@
       if (e.key === 'Tab') { e.preventDefault(); handleTabComplete(); }
     });
     fileInput.addEventListener('change', handleFileSelect);
+    const planToggle = document.getElementById('plan-toggle');
+    planToggle.addEventListener('click', () => {
+      planMode = !planMode;
+      planToggle.classList.toggle('active', planMode);
+      promptInput.placeholder = planMode ? 'Plan mode — describe what to plan...' : 'Send a message...';
+    });
     sendBtn.addEventListener('click', sendPrompt);
     promptInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendPrompt(); }
+      if (e.key === 'Enter' && !e.shiftKey && !isMobile()) { e.preventDefault(); sendPrompt(); }
     });
     promptInput.addEventListener('input', () => {
       promptInput.style.height = 'auto';

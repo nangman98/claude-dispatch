@@ -556,6 +556,25 @@ footer {
   border-color: var(--accent);
 }
 
+#plan-toggle {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+#plan-toggle.active {
+  background: #f59e0b;
+  color: #000;
+  border-color: #f59e0b;
+}
+
 #send-btn {
   background: var(--accent);
   color: #fff;
