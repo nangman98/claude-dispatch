@@ -16,6 +16,11 @@ const token = getOrCreateToken();
 const store = new SessionStore();
 const runner = new ClaudeRunner();
 
+// Broadcast rate limit updates to all WebSocket clients
+runner.onRateLimitUpdate = (info) => {
+  broadcast({ type: 'rate_limit', ...info });
+};
+
 const app = express();
 app.use(express.json());
 app.use(express.static('public', {
@@ -68,6 +73,10 @@ api.patch('/sessions/:id', (req, res) => {
 
 api.get('/commands', (req, res) => {
   res.json(runner.slashCommands || []);
+});
+
+api.get('/rate-limit', (req, res) => {
+  res.json(runner.latestRateLimit || { status: 'unknown' });
 });
 
 api.delete('/sessions/:id', (req, res) => {
@@ -263,6 +272,7 @@ api.get('/dashboard', (req, res) => {
     },
     recentActivity,
     memoryFiles,
+    rateLimit: runner.latestRateLimit || null,
     system: {
       hostname: os.hostname(),
       platform: `${os.type()} ${os.arch()}`,
@@ -476,7 +486,7 @@ process.on('SIGINT', shutdown);
 
 function shutdown() {
   console.log('\n  Shutting down...');
-  runner.activeProcesses?.forEach((proc) => proc.kill('SIGTERM'));
+  runner.shutdown();
   wss.close();
   server.close(() => process.exit(0));
 }

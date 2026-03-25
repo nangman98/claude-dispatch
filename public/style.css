@@ -1028,3 +1028,34 @@ footer {
   padding: 12px;
   text-align: center;
 }
+
+/* Rate limit bar */
+#rate-limit-bar {
+  padding: 6px 16px;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.rl-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #3fb950;
+  flex-shrink: 0;
+}
+
+.rl-dot.warning {
+  background: #d29922;
+}
+
+/* Stop button */
+#send-btn.stop-mode {
+  background: #f85149 !important;
+  color: #fff !important;
+  opacity: 1 !important;
+}

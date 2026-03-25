@@ -91,7 +91,7 @@
     showScreen('sessions');
     connect();
     bindEvents();
-    loadSessions().then(() => loadBriefing());
+    loadSessions().then(() => { loadBriefing(); loadRateLimit(); });
   }
 
   function showScreen(name) {
@@ -208,6 +208,10 @@
         break;
       }
 
+      case 'rate_limit':
+        updateRateLimit(msg);
+        break;
+
       case 'watchdog':
         showWatchdogAlert(msg);
         break;
@@ -243,6 +247,45 @@
     } else {
       thinkingBar.style.display = 'none';
     }
+  }
+
+  // ===== Rate Limit =====
+  let rateLimitTimer = null;
+  let rateLimitInfo = null;
+
+  function updateRateLimit(info) {
+    rateLimitInfo = info;
+    renderRateLimit();
+    clearInterval(rateLimitTimer);
+    rateLimitTimer = setInterval(renderRateLimit, 60000);
+  }
+
+  function renderRateLimit() {
+    const bar = document.getElementById('rate-limit-bar');
+    if (!rateLimitInfo || !rateLimitInfo.resetsAt) {
+      bar.style.display = 'none';
+      return;
+    }
+    const now = Date.now();
+    const resets = rateLimitInfo.resetsAt * 1000;
+    const diff = resets - now;
+    if (diff <= 0) {
+      bar.style.display = 'none';
+      return;
+    }
+    const hours = Math.floor(diff / 3600000);
+    const mins = Math.floor((diff % 3600000) / 60000);
+    document.getElementById('rl-text').textContent = `Resets in ${hours}h ${mins}m`;
+    document.getElementById('rl-dot').className = 'rl-dot' + (rateLimitInfo.status !== 'allowed' ? ' warning' : '');
+    bar.style.display = '';
+  }
+
+  async function loadRateLimit() {
+    try {
+      const res = await fetch('/api/rate-limit', { headers: { Authorization: `Bearer ${token}` } });
+      const info = await res.json();
+      if (info.resetsAt) updateRateLimit(info);
+    } catch {}
   }
 
   // ===== Sessions =====
@@ -417,12 +460,16 @@
   function enableInput() {
     promptInput.disabled = false;
     sendBtn.disabled = false;
+    sendBtn.textContent = 'Send';
+    sendBtn.classList.remove('stop-mode');
     promptInput.focus();
   }
 
   function disableInput() {
     promptInput.disabled = true;
-    sendBtn.disabled = true;
+    sendBtn.textContent = 'Stop';
+    sendBtn.classList.add('stop-mode');
+    sendBtn.disabled = false;
   }
 
   // -- Slash command autocomplete --
@@ -493,6 +540,18 @@
       } catch {}
     }
     fileInput.value = '';
+  }
+
+  function abortCurrent() {
+    if (!currentSessionId) return;
+    wsSend({ type: 'abort', sessionId: currentSessionId });
+    setThinking(false);
+    enableInput();
+    if (streamingBubble) {
+      streamingBubble.querySelector('.content').classList.remove('typing-indicator');
+      streamingBubble = null;
+      streamingText = '';
+    }
   }
 
   function sendPrompt() {
@@ -606,11 +665,19 @@
       const data = await res.json();
 
       // Overview cards
+      let rlCard = '';
+      if (data.rateLimit && data.rateLimit.resetsAt) {
+        const rlDiff = data.rateLimit.resetsAt * 1000 - Date.now();
+        const rlH = Math.floor(rlDiff / 3600000);
+        const rlM = Math.floor((rlDiff % 3600000) / 60000);
+        rlCard = `<div class="dash-card"><div class="card-label">Rate Limit Reset</div><div class="card-value small">${rlH}h ${rlM}m</div></div>`;
+      }
       overview.innerHTML = `
         <div class="dash-card"><div class="card-label">Sessions</div><div class="card-value">${data.sessions.total}</div></div>
         <div class="dash-card"><div class="card-label">Running</div><div class="card-value success">${data.sessions.running}</div></div>
         <div class="dash-card"><div class="card-label">Messages</div><div class="card-value">${data.sessions.totalMessages}</div></div>
         <div class="dash-card"><div class="card-label">Total Cost</div><div class="card-value accent">$${data.sessions.totalCost}</div></div>
+        ${rlCard}
       `;
 
       // Recent activity
@@ -729,7 +796,13 @@
       planToggle.classList.toggle('active', planMode);
       promptInput.placeholder = planMode ? 'Plan mode — describe what to plan...' : 'Send a message...';
     });
-    sendBtn.addEventListener('click', sendPrompt);
+    sendBtn.addEventListener('click', () => {
+      if (sendBtn.classList.contains('stop-mode')) {
+        abortCurrent();
+      } else {
+        sendPrompt();
+      }
+    });
     promptInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey && !isMobile()) { e.preventDefault(); sendPrompt(); }
     });
